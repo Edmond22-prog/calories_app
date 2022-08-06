@@ -12,12 +12,11 @@ class _HomePageState extends State<HomePage> {
   bool mySwitch = false;
   Color womenColor = Colors.pink;
   Color manColor = Colors.blue;
-  List<double> activityRatio = [1.1, 1.3, 1.5];
   int selectedRadio = 3;
 
   double theHeight = 100;
   var theWeight = "";
-  late double theActivity;
+  double theActivity = 0.0;
   int theAge = 0;
 
   Future<void> displayDate() async {
@@ -39,6 +38,68 @@ class _HomePageState extends State<HomePage> {
         theAge = DateTime.now().year - birthday.year;
       });
     }
+  }
+
+  List<Widget> provideRadio() {
+    Map activities = {"Sedentary": 1.1, "Moderate": 1.3, "Intense": 1.5};
+    List<Column> result = [];
+    int counter = 0;
+
+    activities.forEach((key, value) {
+      var column = Column(
+        children: [
+          Radio(
+              value: counter,
+              groupValue: selectedRadio,
+              activeColor: (mySwitch) ? manColor : womenColor,
+              onChanged: (i) {
+                setState(() {
+                  selectedRadio = i as int;
+                  theActivity = value;
+                });
+              }),
+          Text(
+            key,
+            style: TextStyle(color: (mySwitch) ? manColor : womenColor),
+          )
+        ],
+      );
+      result.add(column);
+      counter += 1;
+    });
+    return result;
+  }
+
+  Future<void> alert() async {
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(
+              "Error",
+              textScaleFactor: 1,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: (mySwitch) ? manColor : womenColor,
+                  fontWeight: FontWeight.bold),
+            ),
+            content: const Text(
+              "All information need to be filled !",
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    "Close",
+                    style: TextStyle(color: (mySwitch) ? manColor : womenColor),
+                  ))
+            ],
+          );
+        });
   }
 
   @override
@@ -154,77 +215,23 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 20),
                     Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Column(
-                            children: [
-                              Radio(
-                                  value: 0,
-                                  groupValue: selectedRadio,
-                                  activeColor:
-                                      (mySwitch) ? manColor : womenColor,
-                                  onChanged: (i) {
-                                    setState(() {
-                                      selectedRadio = i as int;
-                                      theActivity =
-                                          activityRatio[selectedRadio];
-                                    });
-                                  }),
-                              Text(
-                                "Sedentary",
-                                style: TextStyle(
-                                    color: (mySwitch) ? manColor : womenColor),
-                              )
-                            ],
-                          ),
-                          Column(
-                            children: [
-                              Radio(
-                                  value: 1,
-                                  groupValue: selectedRadio,
-                                  activeColor:
-                                      (mySwitch) ? manColor : womenColor,
-                                  onChanged: (i) {
-                                    setState(() {
-                                      selectedRadio = i as int;
-                                      theActivity =
-                                          activityRatio[selectedRadio];
-                                    });
-                                  }),
-                              Text(
-                                "Moderate",
-                                style: TextStyle(
-                                    color: (mySwitch) ? manColor : womenColor),
-                              )
-                            ],
-                          ),
-                          Column(children: [
-                            Radio(
-                                value: 2,
-                                groupValue: selectedRadio,
-                                activeColor: (mySwitch) ? manColor : womenColor,
-                                onChanged: (i) {
-                                  setState(() {
-                                    selectedRadio = i as int;
-                                    theActivity = activityRatio[selectedRadio];
-                                  });
-                                }),
-                            Text(
-                              "Intense",
-                              style: TextStyle(
-                                  color: (mySwitch) ? manColor : womenColor),
-                            )
-                          ])
-                        ])
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: provideRadio(),
+                    )
                   ]),
                 ),
               ),
               const SizedBox(height: 10),
               ElevatedButton(
-                onPressed: () {
-                  print("The Age : $theAge, The Height : $theHeight, "
-                      "The Weight : $theWeight, Activity : $theActivity");
-                },
+                onPressed: (theHeight == 100 ||
+                        theWeight == "" ||
+                        theActivity == 0.0 ||
+                        theAge == 0)
+                    ? alert
+                    : () {
+                        print("The Age : $theAge, The Height : $theHeight, "
+                            "The Weight : $theWeight, Activity : $theActivity");
+                      },
                 style: ElevatedButton.styleFrom(
                   primary: (mySwitch) ? manColor : womenColor,
                 ),
