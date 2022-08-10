@@ -1,3 +1,4 @@
+import 'package:calories_app/operation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -15,8 +16,8 @@ class _HomePageState extends State<HomePage> {
   int selectedRadio = 3;
 
   double theHeight = 100;
-  var theWeight = "";
-  double theActivity = 0.0;
+  String theWeight = "";
+  double theActivity = 0;
   int theAge = 0;
 
   Future<void> displayDate() async {
@@ -41,7 +42,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Widget> provideRadio() {
-    Map activities = {"Sedentary": 1.1, "Moderate": 1.3, "Intense": 1.5};
+    Map activities = {"Sedentary": 1.37, "Moderate": 1.55, "Intense": 1.80};
     List<Column> result = [];
     int counter = 0;
 
@@ -70,22 +71,24 @@ class _HomePageState extends State<HomePage> {
     return result;
   }
 
-  Future<void> alert() async {
+  Future<void> alert({var basicCal = Null, var calNeed = Null}) async {
     return showDialog(
         barrierDismissible: false,
         context: context,
         builder: (context) {
           return AlertDialog(
             title: Text(
-              "Error",
+              (basicCal == Null && calNeed == Null) ? "Error" : "Result",
               textScaleFactor: 1,
               textAlign: TextAlign.center,
               style: TextStyle(
                   color: (mySwitch) ? manColor : womenColor,
                   fontWeight: FontWeight.bold),
             ),
-            content: const Text(
-              "All information need to be filled !",
+            content: Text(
+              (basicCal == Null && calNeed == Null)
+                  ? "All information need to be filled !"
+                  : "Your basic metabolism is $basicCal Kcal\n\nYour caloric need is $calNeed Kcal",
               textAlign: TextAlign.center,
             ),
             actions: [
@@ -94,7 +97,7 @@ class _HomePageState extends State<HomePage> {
                     Navigator.pop(context);
                   },
                   child: Text(
-                    "Close",
+                    (basicCal == Null && calNeed == Null) ? "Close" : "Okay",
                     style: TextStyle(color: (mySwitch) ? manColor : womenColor),
                   ))
             ],
@@ -130,107 +133,117 @@ class _HomePageState extends State<HomePage> {
                   width: width / 1.1,
                   height: height / 1.5,
                   padding: const EdgeInsets.all(10.0),
-                  child: Column(children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        const Text(
-                          "Woman",
-                          style: TextStyle(color: Colors.pink),
+                  child: SingleChildScrollView(
+                    child: Column(children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          const Text(
+                            "Woman",
+                            style: TextStyle(color: Colors.pink),
+                          ),
+                          Switch(
+                            value: mySwitch,
+                            onChanged: (bool b) {
+                              setState(() {
+                                mySwitch = b;
+                              });
+                            },
+                            inactiveTrackColor: Colors.pinkAccent,
+                            inactiveThumbColor: womenColor,
+                          ),
+                          const Text(
+                            "Man",
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ],
+                      ),
+                      ElevatedButton(
+                        onPressed: displayDate,
+                        style: ElevatedButton.styleFrom(
+                          primary: (mySwitch) ? manColor : womenColor,
                         ),
-                        Switch(
-                          value: mySwitch,
-                          onChanged: (bool b) {
+                        child: (theAge == 0)
+                            ? const Text("Press to enter your age")
+                            : Text("You are $theAge years old"),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        "Your height is : ${theHeight.toInt()} cm",
+                        style: TextStyle(
+                            color: (mySwitch)
+                                ? Colors.blueAccent
+                                : Colors.pinkAccent),
+                      ),
+                      const SizedBox(height: 10),
+                      Slider(
+                          value: theHeight,
+                          min: 100,
+                          max: 215,
+                          activeColor: (mySwitch) ? manColor : womenColor,
+                          onChanged: (double d) {
                             setState(() {
-                              mySwitch = b;
+                              theHeight = d;
                             });
-                          },
-                          inactiveTrackColor: Colors.pinkAccent,
-                          inactiveThumbColor: womenColor,
+                          }),
+                      const SizedBox(height: 20),
+                      // For the TextField, if the application is for ios, we need
+                      // to wrap the Scaffold on a GestureDetector, because ios
+                      // don't have a validate button on their keyboard.
+                      TextField(
+                        cursorColor: (mySwitch) ? manColor : womenColor,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: "Enter your weight (Kg)",
+                          labelStyle: TextStyle(
+                            color: (mySwitch) ? manColor : womenColor,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: (mySwitch) ? manColor : womenColor)),
+                          focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: (mySwitch) ? manColor : womenColor)),
                         ),
-                        const Text(
-                          "Man",
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                      ],
-                    ),
-                    ElevatedButton(
-                      onPressed: displayDate,
-                      style: ElevatedButton.styleFrom(
-                        primary: (mySwitch) ? manColor : womenColor,
-                      ),
-                      child: (theAge == 0)
-                          ? const Text("Press to enter your age")
-                          : Text("You are $theAge years old"),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "Your height is : ${theHeight.toInt()} cm",
-                      style: TextStyle(
-                          color: (mySwitch)
-                              ? Colors.blueAccent
-                              : Colors.pinkAccent),
-                    ),
-                    const SizedBox(height: 10),
-                    Slider(
-                        value: theHeight,
-                        min: 100,
-                        max: 215,
-                        activeColor: (mySwitch) ? manColor : womenColor,
-                        onChanged: (double d) {
+                        onSubmitted: (String s) {
                           setState(() {
-                            theHeight = d;
+                            theWeight = s;
                           });
-                        }),
-                    const SizedBox(height: 20),
-                    // For the TextField, if the application is for ios, we need
-                    // to wrap the Scaffold on a GestureDetector, because ios
-                    // don't have a validate button on their keyboard.
-                    TextField(
-                      cursorColor: (mySwitch) ? manColor : womenColor,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: "Enter your weight (Kg)",
-                        labelStyle: TextStyle(
-                          color: (mySwitch) ? manColor : womenColor,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: (mySwitch) ? manColor : womenColor)),
-                        focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: (mySwitch) ? manColor : womenColor)),
+                        },
                       ),
-                      onSubmitted: (String s) {
-                        setState(() {
-                          theWeight = s;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "How is your sports activity ?",
-                      style:
-                          TextStyle(color: (mySwitch) ? manColor : womenColor),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: provideRadio(),
-                    )
-                  ]),
+                      const SizedBox(height: 20),
+                      Text(
+                        "How is your sports activity ?",
+                        style:
+                            TextStyle(color: (mySwitch) ? manColor : womenColor),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: provideRadio(),
+                      )
+                    ]),
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: (theHeight == 100 ||
                         theWeight == "" ||
-                        theActivity == 0.0 ||
+                        theActivity == 0 ||
                         theAge == 0)
                     ? alert
                     : () {
-                        print("The Age : $theAge, The Height : $theHeight, "
-                            "The Weight : $theWeight, Activity : $theActivity");
+                        var basic = 0;
+                        if (mySwitch) {
+                          basic = showBasicMetabolism(1, int.parse(theWeight),
+                              theHeight.toInt(), theAge);
+                        } else {
+                          basic = showBasicMetabolism(0, int.parse(theWeight),
+                              theHeight.toInt(), theAge);
+                        }
+                        var need = showCaloricNeed(basic, theActivity);
+                        alert(basicCal: basic, calNeed: need);
                       },
                 style: ElevatedButton.styleFrom(
                   primary: (mySwitch) ? manColor : womenColor,
